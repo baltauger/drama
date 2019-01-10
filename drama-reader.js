@@ -1,7 +1,7 @@
-var SprayReader = function(container){
+var DramaReader = function(container){
   this.container = $(container);
 };
-SprayReader.prototype = {
+DramaReader.prototype = {
   afterDoneCallback: null,
   wpm: null,
   msPerWord: null,
@@ -163,3 +163,5 @@ function pivot(word){
 String.prototype.repeat = function( num ){
     return new Array( num + 1 ).join( this );
 }
+
+module.exports = DramaReader;
