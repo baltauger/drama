@@ -84,7 +84,10 @@ DramaReader.prototype = {
   displayWordAndIncrement: function() {
     var pivotedWord = pivot(this.words[this.wordIdx]);
 
-    this.$container.html(pivotedWord);
+    //this.$container.html(pivotedWord);
+    this.$dramaStart.text(pivotedWord[0]);
+    this.$dramaPivot.text(pivotedWord[1]);
+    this.$dramaEnd.text(pivotedWord[2]);
 
     this.wordIdx++;
     if (thisObj.wordIdx >= thisObj.words.length) {
@@ -125,13 +128,10 @@ function pivot(word){
             end = word.slice(word.length/2, word.length);
         }
 
-        var result;
-        result = "<span class='drama_start'>" + start.slice(0, start.length -1);
-        result = result + "</span><span class='drama_pivot'>";
-        result = result + start.slice(start.length-1, start.length);
-        result = result + "</span><span class='drama_end'>";
-        result = result + end;
-        result = result + "</span>";
+        var result = [];
+        result.push(start.slice(0, start.length -1));
+        result.push(start.slice(start.length-1, start.length));
+        result.push(end);
     }
 
     else{
@@ -146,17 +146,14 @@ function pivot(word){
         var start = word.slice(0, word.length/2);
         var end = word.slice(word.length/2, word.length);
 
-        var result;
-        result = "<span class='drama_start'>" + start.slice(0, start.length -1);
-        result = result + "</span><span class='drama_pivot'>";
-        result = result + start.slice(start.length-1, start.length);
-        result = result + "</span><span class='drama_end'>";
-        result = result + end;
-        result = result + "</span>";
+        var result = [];
+        result.push(start.slice(0, start.length -1));
+        result.push(start.slice(start.length-1, start.length));
+        result.push(end);
 
     }
 
-    result = result.replace(/\./g, "<span class='invisible'>.</span>");
+    //result = result.replace(/\./g, "<span class='invisible'>.</span>");
 
     return result;
 }
