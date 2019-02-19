@@ -35,7 +35,7 @@ DramaReader.prototype = {
 
     var allWords = [];
     var wordIndex = 0;
-    var firstWordRegex = /^(.+?)(?:[\s]|$)([\s\S]*)/;
+    var firstWordRegex = /(.+?)(?:[\s]|$)([\s\S]*)/;
     var isMarkupStartRegex = /<a/;
     var isPassageLinkRegex = /^(?:<a).*(?:data-passage=")(.*?)(?:">)(.*?)<\/a>([\s\S]*)/;
 
