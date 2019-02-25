@@ -3,21 +3,24 @@ var DramaReader = function(container){
   this.$dramaStart = $("<span class='drama_start'></span>").appendTo(this.$container);
   this.$dramaPivot = $("<span class='drama_pivot'></span>").appendTo(this.$container);
   this.$dramaEnd = $("<span class='drama_end'></span>").appendTo(this.$container);
+
 };
 DramaReader.prototype = {
   afterDoneCallback: null,
   wpm: null,
   msPerWord: null,
-  wordIdx: null,
+  nxtWordIdx: null,
   input: null,
   words: null,
   actions:null,
+  rhythms:null,
   isRunning: false,
   timers: [],
 
   setInput: function(input) {
     this.input = input;
     this.actions = {};
+    this.rhythms = {};
 
     var paragraphRegex = /(?:<p>)([\s\S]*?)(?:<\/p>)/g;
     var paragraph = paragraphRegex.exec(input);
@@ -50,7 +53,7 @@ DramaReader.prototype = {
           {
             //it's just a word.
             allWords.push(firstWord[1]);
-            wordIndex++;
+            //wordIndex++;
             firstWord = firstWordRegex.exec(firstWord[2]);
           }
           else
@@ -67,12 +70,11 @@ DramaReader.prototype = {
               while (linkWord != null)
               {
                 allWords.push(linkWord[1]);
-                wordIndex++;
-                this.actions[wordIndex] = {action:"showPassage", value:linkPassage};
+                this.actions[allWords.length-1] = {action:"showPassage", value:linkPassage};
+                //wordIndex++;
                 linkWord = firstWordRegex.exec(linkWord[2]);
               }
               firstWord = firstWordRegex.exec(passageLinkData[3]); 
-              //TODO current sample fails here because the string ends up starting with that nasty newline character :(( )
             }
           }
         }
@@ -85,7 +87,7 @@ DramaReader.prototype = {
     //NOTE: "Split on all spaces" is too simplistic for my needs.  I need to work on this particular part of the algorithm to support markup
     // The rest of the processing should only be to adjust the clean, displayable text to the reader
     // Split on spaces
-    var allWords = input.split(/\s+/);
+    //var allWords = input.split(/\s+/);
 
     var word = '';
     var result = '';
@@ -102,27 +104,29 @@ DramaReader.prototype = {
 
       // Double up on long words and words with commas.
       if((allWords[i].indexOf(',') != -1 || allWords[i].indexOf(':') != -1 || allWords[i].indexOf('-') != -1 || allWords[i].indexOf('(') != -1|| allWords[i].length > 8) && allWords[i].indexOf('.') == -1){
-        tmpWords.splice(t+1, 0, allWords[i]);
-        tmpWords.splice(t+1, 0, allWords[i]);
-        t++;
-        t++;
+        // tmpWords.splice(t+1, 0, allWords[i]);
+        // tmpWords.splice(t+1, 0, allWords[i]);
+        // t++;
+        // t++;
+        this.rhythms[i+1] = {note:"pause", value:2};
       }
 
       // Add an additional space after punctuation.
       if(allWords[i].indexOf('.') != -1 || allWords[i].indexOf('!') != -1 || allWords[i].indexOf('?') != -1 || allWords[i].indexOf(':') != -1 || allWords[i].indexOf(';') != -1|| allWords[i].indexOf(')') != -1){
-        tmpWords.splice(t+1, 0, ".");
-        tmpWords.splice(t+1, 0, ".");
-        tmpWords.splice(t+1, 0, ".");
-        t++;
-        t++;
-        t++;
+        // tmpWords.splice(t+1, 0, ".");
+        // tmpWords.splice(t+1, 0, ".");
+        // tmpWords.splice(t+1, 0, ".");
+        // t++;
+        // t++;
+        // t++;
+        this.rhythms[i+1] = {note:"pause", value:3};
       }
 
       t++;
     }
 
     this.words = tmpWords.slice(0);
-    this.wordIdx = 0;
+    this.nxtWordIdx = 0;
   },
 
   setWpm: function(wpm) {
@@ -135,9 +139,13 @@ DramaReader.prototype = {
 
     thisObj = this;
 
-    this.timers.push(setInterval(function() {
+    this.timers.push(setTimeout(function() {
       thisObj.displayWordAndIncrement();
     }, this.msPerWord));
+
+    this.$container.mousedown(function(){
+    thisObj.navigateIntent();
+  });
   },
 
   stop: function() {
@@ -149,19 +157,51 @@ DramaReader.prototype = {
   },
 
   displayWordAndIncrement: function() {
-    var pivotedWord = pivot(this.words[this.wordIdx]);
+    var pivotedWord = pivot(this.words[this.nxtWordIdx]);
 
     //this.$container.html(pivotedWord);
     this.$dramaStart.text(pivotedWord[0]);
     this.$dramaPivot.text(pivotedWord[1]);
     this.$dramaEnd.text(pivotedWord[2]);
 
-    this.wordIdx++;
-    if (thisObj.wordIdx >= thisObj.words.length) {
-      this.wordIdx = 0;
+    this.nxtWordIdx++;
+    if (thisObj.nxtWordIdx >= thisObj.words.length) {
+      this.nxtWordIdx = 0;
       this.stop();
       if(typeof(this.afterDoneCallback) === 'function') {
         this.afterDoneCallback();
+      }
+    }
+    else {
+      
+      if(this.rhythms[this.nxtWordIdx] != null) {
+        var rhythmNote = this.rhythms[this.nxtWordIdx];
+        if (rhythmNote.note == "pause")
+        {
+          this.timers.push(setTimeout(function() {
+            thisObj.displayWordAndIncrement();
+          }, this.msPerWord * rhythmNote.value));   
+        }
+      }
+      else {
+        this.timers.push(setTimeout(function() {
+          thisObj.displayWordAndIncrement();
+        }, this.msPerWord)); 
+      }
+    }
+  },
+
+  navigateIntent: function() {
+    console.log("I want to navigate somewhere");
+    console.log(this.nxtWordIdx-1);
+    console.log(this.actions[this.nxtWordIdx-1]);
+
+    if (this.actions[this.nxtWordIdx-1] != null)
+    {
+      var navigationAction = this.actions[this.nxtWordIdx-1];
+      if (navigationAction.action == "showPassage")
+      {
+        window.story.show(navigationAction.value);
       }
     }
   }
