@@ -143,9 +143,9 @@ DramaReader.prototype = {
       thisObj.displayWordAndIncrement();
     }, this.msPerWord));
 
-    this.$container.mousedown(function(){
-    thisObj.navigateIntent();
-  });
+    // this.$container.mousedown(function(){
+    // thisObj.navigateIntent();
+  // });
   },
 
   stop: function() {
@@ -192,18 +192,19 @@ DramaReader.prototype = {
   },
 
   navigateIntent: function() {
-    console.log("I want to navigate somewhere");
-    console.log(this.nxtWordIdx-1);
-    console.log(this.actions[this.nxtWordIdx-1]);
+
+    if(this.actions == null) return null;
 
     if (this.actions[this.nxtWordIdx-1] != null)
     {
       var navigationAction = this.actions[this.nxtWordIdx-1];
       if (navigationAction.action == "showPassage")
       {
-        window.story.show(navigationAction.value);
+        return (navigationAction.value);
       }
     }
+    else
+        return null;
   }
 };
 
