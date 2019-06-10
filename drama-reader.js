@@ -41,7 +41,7 @@ DramaReader.prototype = {
     var firstWordRegex = /(.+?)(?:[\s]|$)([\s\S]*)/;
     var isMarkupStartRegex = /(<a|<d)/;
     var isPassageLinkRegex = /^(?:<a).*(?:data-passage=")(.*?)(?:">)(.*?)<\/a>([\s\S]*)/;
-    var isDramaNoteRegex = /(?:<#)([\s\S]*)(?:#>)([\s\S]*)/;
+    var isDramaNoteRegex = /<d class="(.*)">(.*)<\/d>([\s\S]*)/;
 
     for (paragraphIdx in inputParagraphs)
     {
@@ -76,6 +76,21 @@ DramaReader.prototype = {
                 linkWord = firstWordRegex.exec(linkWord[2]);
               }
               firstWord = firstWordRegex.exec(passageLinkData[3]); 
+            }
+            if(firstWord[0].match(isDramaNoteRegex) != null){
+              var dramaNoteData = isDramaNoteRegex.exec(firstWord[0]);
+              var dramaWords = dramaNoteData[2];
+              var dramaNote = dramaNoteData[1]; //KEEP DEVELOPING THIS !!!
+              //....
+              var dramaWord = firstWordRegex.exec(dramaWords);
+              while (dramaWord != null)
+              {
+                allWords.push(dramaWord[1]);
+                this.actions[allWords.length-1] = {action:"dramaNote", value:dramaNote};
+                //wordIndex++;
+                dramaWord = firstWordRegex.exec(dramaWord[2]);
+              }
+              firstWord = firstWordRegex.exec(dramaNoteData[3]);
             }
           }
         }
@@ -164,6 +179,16 @@ DramaReader.prototype = {
     this.$dramaStart.text(pivotedWord[0]);
     this.$dramaPivot.text(pivotedWord[1]);
     this.$dramaEnd.text(pivotedWord[2]);
+
+    //run action
+    if (this.actions[this.nxtWordIdx] != null)
+    {
+      var dramaNoteAction = this.actions[this.nxtWordIdx];
+      if (dramaNoteAction.action == "dramaNote")
+      {
+        window.story.state[dramaNoteAction.value]();
+      }
+    }
 
     this.nxtWordIdx++;
     if (thisObj.nxtWordIdx >= thisObj.words.length) {
