@@ -176,9 +176,9 @@ DramaReader.prototype = {
     var pivotedWord = pivot(this.words[this.nxtWordIdx]);
 
     //this.$container.html(pivotedWord);
-    this.$dramaStart.text(pivotedWord[0]);
-    this.$dramaPivot.text(pivotedWord[1]);
-    this.$dramaEnd.text(pivotedWord[2]);
+    this.$dramaStart.html(pivotedWord[0]);
+    this.$dramaPivot.html(pivotedWord[1]);
+    this.$dramaEnd.html(pivotedWord[2]);
 
     //run action
     if (this.actions[this.nxtWordIdx] != null)
@@ -270,12 +270,8 @@ function pivot(word){
 
     else{
 
-        word = '.......' + word;
-
         var tail = 22 - (word.length + 7);
-        if(tail > 0) {
-          word + ('.'.repeat(tail));
-        }
+        word = '.......' + word + ('.'.repeat(tail));
 
         var start = word.slice(0, word.length/2);
         var end = word.slice(word.length/2, word.length);
@@ -287,15 +283,17 @@ function pivot(word){
 
     }
 
-    //result = result.replace(/\./g, "<span class='invisible'>.</span>");
+    result.forEach(function(item,index,array){
+      array[index] = array[index].replace(/\./g, "<span class='invisible'>.</span>")
+    });
 
     return result;
 }
 
 // Let strings repeat themselves,
 // because JavaScript isn't as awesome as Python.
-String.prototype.repeat = function( num ){
+/*String.prototype.repeat = function( num ){
     return new Array( num + 1 ).join( this );
 }
-
+*/
 module.exports = DramaReader;
