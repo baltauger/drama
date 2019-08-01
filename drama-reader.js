@@ -7,6 +7,7 @@ var DramaReader = function(container){
 };
 DramaReader.prototype = {
   afterDoneCallback: null,
+  lastShownLink:null,
   wpm: null,
   msPerWord: null,
   nxtWordIdx: null,
@@ -75,7 +76,8 @@ DramaReader.prototype = {
                 //wordIndex++;
                 linkWord = firstWordRegex.exec(linkWord[2]);
               }
-              firstWord = firstWordRegex.exec(passageLinkData[3]); 
+              firstWord = firstWordRegex.exec(passageLinkData[3]);
+              if (firstWord == null) break;
             }
             if(firstWord[0].match(isDramaNoteRegex) != null){
               var dramaNoteData = isDramaNoteRegex.exec(firstWord[0]);
@@ -94,6 +96,11 @@ DramaReader.prototype = {
             }
           }
         }
+
+        if (paragraphIdx < inputParagraphs.length-1){
+          allWords.push("         ");
+        }
+        
         console.log(allWords);
         console.log(wordIndex);
     }
@@ -112,6 +119,9 @@ DramaReader.prototype = {
     var tmpWords = allWords.slice(0); // copy Array
     var t = 0;
 
+    //add initial pause
+    this.rhythms[0] = {note:"pause", value:4};
+
     for (var i=0; i<allWords.length; i++){
 
       if(allWords[i].indexOf('.') != -1){
@@ -128,7 +138,7 @@ DramaReader.prototype = {
       }
 
       // Add an additional space after punctuation.
-      if(allWords[i].indexOf('.') != -1 || allWords[i].indexOf('!') != -1 || allWords[i].indexOf('?') != -1 || allWords[i].indexOf(':') != -1 || allWords[i].indexOf(';') != -1|| allWords[i].indexOf(')') != -1){
+      if(allWords[i].indexOf('.') != -1 || allWords[i].indexOf('!') != -1 || allWords[i].indexOf('?') != -1 || allWords[i].indexOf(':') != -1 || allWords[i].indexOf(';') != -1){
         // tmpWords.splice(t+1, 0, ".");
         // tmpWords.splice(t+1, 0, ".");
         // tmpWords.splice(t+1, 0, ".");
@@ -136,6 +146,11 @@ DramaReader.prototype = {
         // t++;
         // t++;
         this.rhythms[i+1] = {note:"pause", value:3};
+      }
+
+      if (allWords[i].indexOf('         ') != -1) {
+
+        this.rhythms[i+1] = {note:"pause", value:4};
       }
 
       t++;
@@ -158,10 +173,6 @@ DramaReader.prototype = {
     this.timers.push(setTimeout(function() {
       thisObj.displayWordAndIncrement();
     }, this.msPerWord));
-
-    // this.$container.mousedown(function(){
-    // thisObj.navigateIntent();
-  // });
   },
 
   stop: function() {
@@ -170,6 +181,12 @@ DramaReader.prototype = {
     for(var i = 0; i < this.timers.length; i++) {
       clearTimeout(this.timers[i]);
     }
+  },
+
+  clear: function() {
+    this.$dramaStart.html("");
+    this.$dramaPivot.html("");
+    this.$dramaEnd.html("");
   },
 
   displayWordAndIncrement: function() {
@@ -193,6 +210,8 @@ DramaReader.prototype = {
         this.$dramaStart.addClass('drama_link');
         this.$dramaPivot.addClass('drama_link');
         this.$dramaEnd.addClass('drama_link');
+
+        this.lastShownLink = dramaNoteAction;
       }
     }
     else {
@@ -203,10 +222,12 @@ DramaReader.prototype = {
 
     this.nxtWordIdx++;
     if (thisObj.nxtWordIdx >= thisObj.words.length) {
-      this.nxtWordIdx = 0;
+      this.nxtWordIdx = thisObj.words.length-1;
       this.stop();
       if(typeof(this.afterDoneCallback) === 'function') {
-        this.afterDoneCallback();
+        var callback = this.afterDoneCallback;
+        this.afterDoneCallback = null;
+        callback();
       }
     }
     else {
